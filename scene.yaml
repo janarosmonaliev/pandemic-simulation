@@ -1,19 +1,121 @@
 import:
-  - default.yaml
+  - https://tangrams.github.io/blocks/global.yaml
+  - https://tangrams.github.io/blocks/filter/height.yaml
+
+sources:
+  nextzen:
+    type: MVT
+    url: https://tile.nextzen.org/tilezen/vector/v1/512/all/{z}/{x}/{y}.mvt
+    tile_size: 512
+    max_zoom: 16
+    url_params:
+      api_key: eMWOf9MkTcWPnOW0gXGp3A
 
 scene:
   background:
     color: black
 
+cameras:
+  camera:
+    type: perspective
+    focal_length: 0.8
+    # vanishing_point: [0, -500]
+
+lights:
+  dir:
+    type: directional
+    direction: [.1, .5, -1]
+    diffuse: .7
+    ambient: .5
+
+layers:
+  water:
+    data: { source: nextzen }
+    draw:
+      water:
+        order: global.order
+        color: "#0f1621"
+  earth:
+    data: { source: nextzen }
+    draw:
+      earth:
+        order: global.order
+        color: "#4A4A4A"
+  landuse:
+    data: { source: nextzen }
+    draw:
+      landuse:
+        order: global.order
+        color: "#4A4A4A"
+  roads:
+    data: { source: nextzen }
+    filter: { not: { kind: [rail, ferry] } }
+    draw:
+      roads:
+        order: global.order
+        color: "#68ffdc"
+        width: [[7, 0.0px], [10, .5px], [15, .75px], [17, 5m]]
+        join: round
+    highway:
+      filter: { kind: highway }
+      draw:
+        roads:
+          order: global.order
+          width:
+            [[8, 0px], [8, .25px], [11, 1.5px], [14, 2px], [16, 4px], [17, 10m]]
+      link:
+        filter: { is_link: true } # on- and off-ramps, etc
+        draw:
+          roads:
+            width: [[8, 0px], [14, 3px], [16, 5px], [18, 10m]]
+        tunnel-link:
+          filter: { is_tunnel: true, $zoom: { min: 13 } }
+    tunnel:
+      filter: { is_tunnel: true }
+      draw:
+        roads:
+          order: global.order
+  buildings:
+    data: { source: nextzen }
+    draw:
+      _transparent:
+        order: global.order
+        color: [.8, .8, .8, .9]
+        extrude: true
+      baseline:
+        style: lines
+        order: global.order
+        width: [[12, .1px], [18, 1px]]
+        color: "#68ffdc"
+      shaders:
+        blocks:
+          color: |
+            if (isWall()) {
+                // Put lines at the edge of walls
+                float lineWidth = 0.003*(u_tile_origin.z/20.0);
+                color.rgb = mix(color.rgb,
+                                vec3(1.),
+                                1.0-(step(lineWidth,v_texcoord.x)-step(1.0-lineWidth,v_texcoord.x)));
+            }
+  buildingsLines:
+    order: global.order-top
+    color: "#68ffdc"
+    width: [[12, .1px], [14, 0.1px], [15, 0.5px], [17, 1.0px], [18, 1px]]
+    extrude: true
 styles:
+  _transparent:
+    base: polygons
+    blend: overlay
   water:
     base: polygons
   earth:
     base: polygons
+    lightning: true
   landuse:
     base: polygons
   roads:
     base: lines
-    lighting: false
+    lighting: true
   buildings:
     base: polygons
+    mix: [filter-height]

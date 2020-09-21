@@ -1,0 +1,94 @@
+cameras:
+  perspective:
+    type: perspective
+    focal_length: 0.8
+lights:
+  directional1:
+    type: directional
+    direction: [.1, .5, -1]
+    diffuse: .6
+    ambient: .7
+styles:
+  buildings:
+    base: polygons
+    shaders:
+      blocks:
+        color: |
+          color.rgb *= vec3(min((v_world_position.z*.001 + .5),1.));
+sources:
+  nextzen:
+    type: MVT
+    url: https://tile.nextzen.org/tilezen/vector/v1/512/all/{z}/{x}/{y}.mvt
+    tile_size: 512
+    max_zoom: 16
+    url_params:
+      api_key: eMWOf9MkTcWPnOW0gXGp3A
+
+layers:
+  water:
+    data: { source: nextzen }
+    draw:
+      polygons:
+        order: function() { return feature.sort_rank; }
+        color: "#353535"
+  earth:
+    data: { source: nextzen }
+    draw:
+      polygons:
+        order: function() { return feature.sort_rank; }
+        color: "#555"
+  landuse:
+    data: { source: nextzen }
+    draw:
+      polygons:
+        order: function() { return feature.sort_rank; }
+        color: "#666"
+  roads:
+    data: { source: nextzen }
+    # filter:
+    #   not: { kind: [rail, ferry] }
+    draw:
+      lines:
+        order: function() { return feature.sort_rank; }
+        color: "#68ffdc"
+        width: 3
+  buildings:
+    data: { source: nextzen }
+    draw:
+      polygons:
+        order: function() { return feature.sort_rank; }
+        color: "#999"
+    extruded:
+      draw:
+        polygons:
+          style: buildings
+          extrude: function () { return feature.height > 0 || $zoom >= 12; }
+  road_labels:
+    data: { source: nextzen, layer: roads }
+    filter:
+      {
+        name: true,
+        aeroway: false,
+        tunnel: false,
+        railway: false,
+        not: { kind: [rail, ferry] },
+      }
+
+    highway:
+      filter: { kind: highway, $zoom: { min: 7 } }
+      draw:
+        text:
+          font:
+            fill: white
+            weight: 500
+            size: 12px
+            family: Helvetica
+    not_highway:
+      filter: { not: { kind: highway }, $zoom: { min: 13 } }
+      draw:
+        text:
+          font:
+            fill: white
+            weight: 100
+            size: 11px
+            family: Helvetica
