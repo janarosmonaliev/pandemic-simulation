@@ -1,22 +1,49 @@
+<!DOCTYPE html>
+<!--
+    Tangram: real-time WebGL rendering for OpenStreetMap
+    http://github.com/tangrams/tangram
+    http://mapzen.com
+-->
 <html>
   <head>
+    <title>Simple demo – Tangram</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css"
+    />
+
     <style>
-      body,
-      html {
-        border: 0;
-        margin: 0;
-        padding: 0;
+      body {
+        margin: 0px;
+        border: 0px;
+        padding: 0px;
       }
+
       #map {
-        height: 100vh;
-        width: 100vw;
+        height: 100%;
+        width: 100%;
+        position: absolute;
       }
     </style>
-    <script src="https://unpkg.com/three/build/three.min.js"></script>
-    <script src="https://unpkg.com/@here/harp.gl/dist/harp.js"></script>
   </head>
+
   <body>
-    <canvas id="map"></canvas>
-    <script src="index.js"></script>
+    <div id="map"></div>
+
+    <!-- leaflet -->
+    <script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js"></script>
+
+    <!-- Main tangram library -->
+    <script
+      type="module"
+      src="https://unpkg.com/tangram/dist/tangram.min.mjs"
+    ></script>
+    <script
+      nomodule
+      src="https://unpkg.com/tangram/dist/tangram.min.js"
+    ></script>
+
+    <!-- Demo setup -->
+    <script defer src="index.js"></script>
   </body>
 </html>

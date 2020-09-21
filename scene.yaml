@@ -1,0 +1,19 @@
+import:
+  - default.yaml
+
+scene:
+  background:
+    color: black
+
+styles:
+  water:
+    base: polygons
+  earth:
+    base: polygons
+  landuse:
+    base: polygons
+  roads:
+    base: lines
+    lighting: false
+  buildings:
+    base: polygons

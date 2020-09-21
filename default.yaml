@@ -1,0 +1,94 @@
+# Author @patriciogv - 2015
+
+import:
+  - https://tangrams.github.io/blocks/global.yaml
+  - https://tangrams.github.io/blocks/filter/height.yaml
+
+sources:
+  nextzen:
+    type: MVT
+    url: https://tile.nextzen.org/tilezen/vector/v1/512/all/{z}/{x}/{y}.mvt
+    tile_size: 512
+    max_zoom: 16
+    url_params:
+      api_key: eMWOf9MkTcWPnOW0gXGp3A
+
+cameras:
+  camera:
+    type: perspective
+    focal_length: 0.8
+    # vanishing_point: [0, -500]
+
+lights:
+  dir:
+    type: directional
+    direction: [.1, .5, -1]
+    diffuse: .7
+    ambient: .5
+
+layers:
+  water:
+    data: { source: nextzen }
+    draw:
+      water:
+        order: global.order
+        color: "#353535"
+  earth:
+    data: { source: nextzen }
+    draw:
+      earth:
+        order: global.order
+        color: "#555"
+  landuse:
+    data: { source: nextzen }
+    draw:
+      landuse:
+        order: global.order
+        color: "#666"
+  roads:
+    data: { source: nextzen }
+    filter: { not: { kind: [rail, ferry] } }
+    draw:
+      roads:
+        order: global.order
+        color: [0.988, 0.988, 0.988]
+        width: [[7, 0.0px], [10, .5px], [15, .75px], [17, 5m]]
+    highway:
+      filter: { kind: highway }
+      draw:
+        roads:
+          order: global.order
+          width:
+            [[8, 0px], [8, .25px], [11, 1.5px], [14, 2px], [16, 4px], [17, 10m]]
+      link:
+        filter: { is_link: true } # on- and off-ramps, etc
+        draw:
+          roads:
+            width: [[8, 0px], [14, 3px], [16, 5px], [18, 10m]]
+        tunnel-link:
+          filter: { is_tunnel: true, $zoom: { min: 13 } }
+    tunnel:
+      filter: { is_tunnel: true }
+      draw:
+        roads:
+          order: global.order
+  buildings:
+    data: { source: nextzen }
+    draw:
+      buildings:
+        order: global.order
+        color: "#999"
+        extrude: true
+styles:
+  water:
+    base: polygons
+  earth:
+    base: polygons
+  landuse:
+    base: polygons
+  roads:
+    base: lines
+    lighting: false
+  buildings:
+    base: polygons
+    mix: [filter-height]
