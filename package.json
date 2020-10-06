@@ -1,0 +1,30 @@
+{
+  "name": "research-simulations",
+  "version": "1.0.0",
+  "description": "Research Project at SUNY Korea",
+  "private": true,
+  "dependencies": {
+    "three": "^0.121.1",
+    "webpack": "^4.44.2",
+    "webpack-cli": "^3.3.12"
+  },
+  "devDependencies": {
+    "webpack-dev-server": "^3.11.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack",
+    "start": "webpack-dev-server --open"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/janarosmonaliev/research-simulations.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/janarosmonaliev/research-simulations/issues"
+  },
+  "homepage": "https://github.com/janarosmonaliev/research-simulations#readme"
+}
