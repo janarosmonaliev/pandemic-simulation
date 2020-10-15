@@ -4,17 +4,21 @@
   "description": "Research Project at SUNY Korea",
   "private": true,
   "dependencies": {
+    "clean-webpack-plugin": "^0.1.19",
+    "html-webpack-plugin": "^2.30.1",
     "three": "^0.121.1",
     "webpack": "^4.44.2",
-    "webpack-cli": "^3.3.12"
+    "webpack-cli": "^3.3.12",
+    "webpack-merge": "^4.1.0"
   },
   "devDependencies": {
     "webpack-dev-server": "^3.11.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack",
-    "start": "webpack-dev-server --open"
+    "build": "webpack --config=webpack.prod.js",
+    "build-dev": "webpack --config=webpack.dev.js",
+    "start": "webpack-dev-server --open --config=webpack.dev.js"
   },
   "repository": {
     "type": "git",
