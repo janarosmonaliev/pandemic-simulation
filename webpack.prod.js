@@ -8,6 +8,7 @@ module.exports = {
   devtool: "source-map",
   devServer: {
     contentBase: "./dist",
+    writeToDisk: true,
   },
   plugins: [
     // new CleanWebpackPlugin(),
@@ -20,6 +21,6 @@ module.exports = {
   ],
   output: {
     filename: "main.js",
-    path: path.resolve(__dirname, "dist"),
+    path: path.resolve(__dirname, ""),
   },
 };
