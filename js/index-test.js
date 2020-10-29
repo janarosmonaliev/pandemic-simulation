@@ -35,13 +35,18 @@ function init() {
 
   // on initialise la camera que l’on place ensuite sur la scène
   camera = new THREE.PerspectiveCamera(
-    30,
+    75,
     RENDER_WIDTH / RENDER_HEIGHT,
     100,
     10000
   );
-  camera.position.set(0, 0, 500);
+  camera.position.set(0, 500, 0);
   scene.add(camera);
+
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.maxPolarAngle = Math.PI * 0.5;
+  controls.minDistance = 500;
+  controls.maxDistance = 5000;
 
   var skyBoxGeometry = new THREE.CubeGeometry(10000, 10000, 10000);
   var skyBoxMaterial = new THREE.MeshBasicMaterial({
@@ -51,7 +56,7 @@ function init() {
   var skyBox = new THREE.Mesh(skyBoxGeometry, skyBoxMaterial);
   scene.add(skyBox);
 
-  //scene.fog = new THREE.FogExp2( skyBoxMaterial.color, 0.0004 );	// ( skyBoxMaterial.color, 0.0003 )
+  // scene.fog = new THREE.FogExp2(skyBoxMaterial.color, 0.0004); // ( skyBoxMaterial.color, 0.0003 )
   scene.fog = new THREE.Fog(skyBoxMaterial.color, 900, 4000); // ( skyBoxMaterial.color, 0.0003 )
 
   var planeGeometry = new THREE.PlaneGeometry(100000, 100000);
@@ -107,7 +112,7 @@ function init() {
 
   //scene.add(directionalLight2);
 
-  THREEx.WindowResize(renderer, camera, RENDER_HEIGHT);
+  // THREE.WindowResize(renderer, camera, RENDER_HEIGHT);
 }
 
 function generate_building(
@@ -328,7 +333,7 @@ function generate_grid(grid_width, grid_length, min_district_size) {
     i += Math.floor(m_rand(min_floor, max_floor)) + 1
   )
     for (var j = 2; j < grid_length - 2; j++) city_grid[j][i] = 1;
-
+  //  NOTE
   for (var i = 0; i < grid_width; i++) city_grid[i][2] = 1;
 
   for (var i = 0; i < grid_width; i++) city_grid[i][grid_width - 3] = 1;
@@ -365,7 +370,6 @@ function generate_grid(grid_width, grid_length, min_district_size) {
       }
     }
   }
-
   return city_grid;
 }
 
@@ -452,9 +456,9 @@ var t = 3.15,
 function animate() {
   t += 0.001;
 
-  camera.position.x = radius * Math.cos(t);
-  camera.position.y = 300 * Math.abs(Math.sin(t)) + 300;
-  camera.position.z = radius * Math.sin(t);
+  // camera.position.x = radius * Math.cos(t);
+  // camera.position.y = 300 * Math.abs(Math.sin(t)) + 300;
+  // camera.position.z = radius * Math.sin(t);
   camera.lookAt(new THREE.Vector3(0, 100, 0));
 
   // on appel la fonction animate() récursivement à chaque frame
@@ -462,3 +466,6 @@ function animate() {
   // on effectue le rendu de la scène
   renderer.render(scene, camera);
 }
+
+init();
+animate();
