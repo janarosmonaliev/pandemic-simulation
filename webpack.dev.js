@@ -23,21 +23,11 @@ module.exports = {
   ],
   module: {
     rules: [
-      // {
-      //   test: /\.(glb|zip)$/i,
-      //   loader: 'raw-loader',
-      //   options: {
-      //     // name: '[name].[ext]',
-      //     // outputPath: "./assets",
-
-
-      //   }
-      // },
       {
         test: /\.(png|jpe?g|gltf|bin|zip)$/i,
         loader: 'file-loader',
         options: {
-          name: '[name].[ext]',
+          name: '[path][name].[ext]',
           outputPath: "./assets",
 
 
