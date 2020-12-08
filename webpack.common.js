@@ -13,6 +13,20 @@ module.exports = {
       title: "Production",
     }),
   ],
+  module: {
+    rules: [
+      {
+        test: /\.(png|jpe?g|gltf)$/i,
+        loader: 'file-loader',
+        options: {
+          name: '[path][name].[ext]',
+          outputPath: "./assets",
+
+
+        }
+      },
+    ],
+  },
   output: {
     filename: "main.js",
     path: path.resolve(__dirname, "dist"),

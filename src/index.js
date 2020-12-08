@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Matrix4 } from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import House from "./objects/Flat.gltf"
 
 var renderer, camera, scene, controls;
 var plane, cube;
@@ -36,7 +38,7 @@ function init() {
 
   controls.maxPolarAngle = Math.PI * 0.5;
   controls.minPolarAngle = Math.PI * 0.1;
-  controls.minDistance = 500;
+  controls.minDistance = 300;
   controls.maxDistance = 5000;
 
   // NOTE: Skybox
@@ -52,7 +54,7 @@ function init() {
   // NOTE: Plane
   var planeGeometry = new THREE.PlaneBufferGeometry(3000, 3000);
   var planeMaterial = new THREE.MeshStandardMaterial({
-    color: 0x373737,
+    color: 0xa1a1a1,
     polygonOffset: true,
     polygonOffsetFactor: 5,
     side: THREE.DoubleSide,
@@ -98,16 +100,23 @@ function init() {
   // scene.add(helper);
 
   // SECTION City Generation
-  scene.add(generateCity(3000, 3000));
+  scene.add(generateCity(2000, 2000));
 
   // Reference Material
-  var geometry = new THREE.BoxGeometry(30, 30, 30);
-  var material = new THREE.MeshLambertMaterial({ color: 0xadb5bd });
-  cube = new THREE.Mesh(geometry, material);
-  cube.castShadow = true;
-  cube.receiveShadow = true;
-  cube.position.y = 15;
-  scene.add(cube);
+  const loader = new GLTFLoader();
+
+  loader.load(
+    House,
+    function (gltf) {
+      console.log(gltf.scene.children[0])
+      gltf.scene.scale(20,20,20);
+      scene.add(gltf.scene);
+    },
+    undefined,
+    function (error) {
+      console.error(error);
+    }
+  );
 
   camera.position.y = 2000;
   camera.position.z = 1000;
@@ -131,7 +140,7 @@ function onWindowResize() {
 }
 
 function generateCity(width, length) {
-  var districtMinSize = 80;
+  var districtMinSize = 100;
   var gridWidth = Math.floor(width / districtMinSize);
   var gridLength = Math.floor(length / districtMinSize);
   var cityGrid = generateCityGrid(gridWidth, gridLength, districtMinSize);
@@ -139,7 +148,7 @@ function generateCity(width, length) {
   // Creating districts
   var cityGeometry = new THREE.Geometry();
   var value = 0;
-  while (value <= 2) {
+  while (value <= 1) {
     for (var i = 0; i < gridWidth; i++) {
       for (var j = 0; j < gridLength; j++) {
         if (cityGrid[i][j] == value) {
@@ -167,6 +176,8 @@ function generateCity(width, length) {
           districtLength *= districtMinSize;
 
           var districtHeight = generateDistrictHeightRange();
+
+          // console.log("District. Width: " + districtWidth + " Length " + districtLength)
           var district = generateDistrict(
             districtWidth,
             districtLength,
@@ -217,33 +228,33 @@ function generateCityGrid(gridWidth, gridLength, districtMinSize) {
   var max = 4;
 
   // Horizontal Routes
-  for (var i = 2; i < gridWidth - 2; i += Math.floor(random(min, max)) + 1) {
-    for (var j = 2; j < gridLength - 2; j++) {
+  for (var i = 0; i < gridWidth - 0; i += Math.floor(random(min, max)) + 1) {
+    for (var j = 0; j < gridLength - 0; j++) {
       cityGrid[i][j] = 1;
     }
   }
 
   // Vertical Routes
-  for (var i = 2; i < gridWidth - 2; i += Math.floor(random(min, max)) + 1) {
-    for (var j = 2; j < gridLength - 2; j++) {
+  for (var i = 0; i < gridWidth - 0; i += Math.floor(random(min, max)) + 1) {
+    for (var j = 0; j < gridLength - 0; j++) {
       cityGrid[j][i] = 1;
     }
   }
 
   // NOTE IDK Why I am doing this.
   // 0 = building, 1 = roads
-  for (var i = 0; i < gridWidth; i++) {
-    cityGrid[i][2] = 1;
-  }
-  for (var i = 0; i < gridWidth; i++) {
-    cityGrid[i][gridWidth - 3] = 1;
-  }
-  for (var i = 0; i < gridLength; i++) {
-    cityGrid[2][i] = 1;
-  }
-  for (var i = 0; i < gridLength; i++) {
-    cityGrid[gridLength - 3][i] = 1;
-  }
+  // for (var i = 0; i < gridWidth; i++) {
+  //   cityGrid[i][2] = 1;
+  // }
+  // for (var i = 0; i < gridWidth; i++) {
+  //   cityGrid[i][gridWidth - 3] = 1;
+  // }
+  // for (var i = 0; i < gridLength; i++) {
+  //   cityGrid[2][i] = 1;
+  // }
+  // for (var i = 0; i < gridLength; i++) {
+  //   cityGrid[gridLength - 3][i] = 1;
+  // }
 
   for (var i = 2; i < gridWidth - 2; i++) {
     for (var j = 2; j < gridLength - 2; j++) {
@@ -300,23 +311,18 @@ function generateDistrict(width, length, minHeight, maxHeight) {
     var rowGeometry = new THREE.Geometry();
     for (var i = 0; i < width; i += random(5, 10)) {
       if (width - i < 45) break;
-
       var building = generateBuilding(length - j, minHeight, maxHeight);
-
       if (width - i < building.Width) {
+        // NOTE Look into this later
         building = generateBuilding(width - i, minHeight, maxHeight);
       }
-
       var floorWidth = Math.floor(building.Width / 5) * 5 + 5;
       var floorLength = Math.floor(building.Length / 5) * 5 + 5;
       if (floorLength > rowLength) rowLength = floorLength;
-
       building.Mesh.position.x = i + floorWidth / 2.0;
       building.Mesh.position.z = j + rowLength / 2.0;
-
       // NOTE Deprecated
       THREE.GeometryUtils.merge(rowGeometry, building.Mesh);
-      // rowGeometry.merge(building.Mesh);
       i += floorWidth;
       rowWidth = i;
     }
@@ -367,8 +373,8 @@ function generateDistrict(width, length, minHeight, maxHeight) {
 }
 
 function generateBuilding(bldgMaxWidth, bldgMinHeight, bldgMaxHeight) {
-  var minWidth = 40;
-  var maxWidth = 60;
+  var minWidth = 80;
+  var maxWidth = 80;
 
   bldgMaxWidth =
     bldgMaxWidth < minWidth
@@ -381,6 +387,7 @@ function generateBuilding(bldgMaxWidth, bldgMinHeight, bldgMaxHeight) {
   var height = random(bldgMinHeight, bldgMaxHeight);
   var length = width;
 
+  // Building creation
   var geometry = new THREE.BoxGeometry(width, height, length);
   geometry.applyMatrix4(new THREE.Matrix4().makeTranslation(0, height / 2, 0));
 

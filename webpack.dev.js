@@ -8,8 +8,9 @@ module.exports = {
   devtool: "inline-source-map",
   devServer: {
     contentBase: "./dist",
-    open: true,
+    open: false,
     hot: true,
+    // writeToDisk: true,
   },
   plugins: [
     // new CleanWebpackPlugin(),
@@ -20,6 +21,30 @@ module.exports = {
     //   title: "Development",
     // }),
   ],
+  module: {
+    rules: [
+      // {
+      //   test: /\.(glb|zip)$/i,
+      //   loader: 'raw-loader',
+      //   options: {
+      //     // name: '[name].[ext]',
+      //     // outputPath: "./assets",
+
+
+      //   }
+      // },
+      {
+        test: /\.(png|jpe?g|gltf|bin|zip)$/i,
+        loader: 'file-loader',
+        options: {
+          name: '[name].[ext]',
+          outputPath: "./assets",
+
+
+        }
+      },
+    ],
+  },
   output: {
     filename: "main.js",
     path: path.resolve(__dirname, "dist"),

@@ -12,6 +12,8 @@
     "webpack-merge": "^4.1.0"
   },
   "devDependencies": {
+    "file-loader": "^6.2.0",
+    "raw-loader": "^4.0.2",
     "webpack-dev-server": "^3.11.0"
   },
   "scripts": {

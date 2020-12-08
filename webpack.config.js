@@ -18,6 +18,17 @@ module.exports = {
     //   title: "Development",
     // }),
   ],
+  module: {
+    rules: [
+      {
+        test: /\.(png|jpe?g|gltf)$/i,
+        loader: 'file-loader',
+        options: {
+          // outputPath: "files"
+        }
+      },
+    ],
+  },
   output: {
     filename: "main.js",
     path: path.resolve(__dirname, "dist"),
