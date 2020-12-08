@@ -2,7 +2,8 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Matrix4 } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import House from "./objects/Flat.gltf"
+import Flat from "./objects/Flat.gltf"
+import FlatImg from "./objects/HouseTexture1.png"
 
 var renderer, camera, scene, controls;
 var plane, cube;
@@ -25,7 +26,7 @@ function init() {
     60,
     window.innerWidth / window.innerHeight,
     0.1,
-    10000
+    15000
   );
   // camera.position.set(1000, 50, 1500);
   scene.add(camera);
@@ -36,9 +37,9 @@ function init() {
   controls.dampingFactor = 0.05;
   controls.screenSpacePanning = false;
 
-  controls.maxPolarAngle = Math.PI * 0.5;
-  controls.minPolarAngle = Math.PI * 0.1;
-  controls.minDistance = 300;
+  controls.maxPolarAngle = Math.PI * 0.45;
+  controls.minPolarAngle = Math.PI * 0.0;
+  controls.minDistance = 50;
   controls.maxDistance = 5000;
 
   // NOTE: Skybox
@@ -52,7 +53,11 @@ function init() {
   scene.fog = new THREE.Fog(skyBoxMaterial.color, 1500, 4000);
 
   // NOTE: Plane
-  var planeGeometry = new THREE.PlaneBufferGeometry(3000, 3000);
+  var planeGeometry = new THREE.PlaneBufferGeometry(1300, 1300);
+  // NOTE Shift the plane
+  planeGeometry.applyMatrix4(
+    new THREE.Matrix4().makeTranslation(50,-50,0)
+  )
   var planeMaterial = new THREE.MeshStandardMaterial({
     color: 0xa1a1a1,
     polygonOffset: true,
@@ -100,25 +105,12 @@ function init() {
   // scene.add(helper);
 
   // SECTION City Generation
-  scene.add(generateCity(2000, 2000));
+  scene.add(generateCity(1200, 1200));
 
   // Reference Material
-  const loader = new GLTFLoader();
+  generateFlat();
 
-  loader.load(
-    House,
-    function (gltf) {
-      console.log(gltf.scene.children[0])
-      gltf.scene.scale(20,20,20);
-      scene.add(gltf.scene);
-    },
-    undefined,
-    function (error) {
-      console.error(error);
-    }
-  );
-
-  camera.position.y = 2000;
+  camera.position.y = 1000;
   camera.position.z = 1000;
   camera.position.x = 1000;
 
@@ -140,7 +132,7 @@ function onWindowResize() {
 }
 
 function generateCity(width, length) {
-  var districtMinSize = 100;
+  var districtMinSize = 50;
   var gridWidth = Math.floor(width / districtMinSize);
   var gridLength = Math.floor(length / districtMinSize);
   var cityGrid = generateCityGrid(gridWidth, gridLength, districtMinSize);
@@ -209,7 +201,7 @@ function generateCity(width, length) {
   mesh.applyMatrix4(
     new THREE.Matrix4().makeTranslation(-width / 2, 0, -length / 2)
   );
-
+  console.log(mesh)
   return mesh;
 }
 
@@ -224,18 +216,17 @@ function generateCityGrid(gridWidth, gridLength, districtMinSize) {
     }
   }
 
-  var min = 2;
-  var max = 4;
+  var districtScale = 4;
 
   // Horizontal Routes
-  for (var i = 0; i < gridWidth - 0; i += Math.floor(random(min, max)) + 1) {
+  for (var i = 0; i < gridWidth - 0; i += districtScale + 1) {
     for (var j = 0; j < gridLength - 0; j++) {
       cityGrid[i][j] = 1;
     }
   }
 
   // Vertical Routes
-  for (var i = 0; i < gridWidth - 0; i += Math.floor(random(min, max)) + 1) {
+  for (var i = 0; i < gridWidth - 0; i += districtScale + 1) {
     for (var j = 0; j < gridLength - 0; j++) {
       cityGrid[j][i] = 1;
     }
@@ -305,17 +296,14 @@ function generateDistrict(width, length, minHeight, maxHeight) {
   var rowLength = 0;
   var totalLength = 0;
 
-  for (var j = 0; j < length; j += random(5, 10)) {
+  for (var j = 0; j < length; j += 5) {
     if (length - j < 45) break;
-
+    
     var rowGeometry = new THREE.Geometry();
-    for (var i = 0; i < width; i += random(5, 10)) {
+    for (var i = 0; i < width; i += 5) {
       if (width - i < 45) break;
       var building = generateBuilding(length - j, minHeight, maxHeight);
-      if (width - i < building.Width) {
-        // NOTE Look into this later
-        building = generateBuilding(width - i, minHeight, maxHeight);
-      }
+     
       var floorWidth = Math.floor(building.Width / 5) * 5 + 5;
       var floorLength = Math.floor(building.Length / 5) * 5 + 5;
       if (floorLength > rowLength) rowLength = floorLength;
@@ -460,4 +448,40 @@ function Building(Width, Height, Length, Mesh) {
 
 function random(min, max) {
   return min + Math.random() * (max - min);
+}
+function generateFlat(){
+  var loader = new GLTFLoader();
+  loader.load(
+    Flat,
+    function (gltf) {
+      var flat = gltf.scene.children[0];
+      
+      var newMaterial = new THREE.MeshLambertMaterial({
+        color: 0xffffff,
+      });
+      var textureLoader = new THREE.TextureLoader();
+      var texture = textureLoader.load(FlatImg);
+      
+      
+      gltf.scene.traverse(function(child) {
+        if (child.isMesh){
+          child.material = newMaterial;
+          child.material.map = texture;
+          child.receiveShadow = true;
+          child.castShadow = true;
+        }
+      })
+      flat.visible = true;
+      // flat.geometry.center()
+      // flat.geometry.applyMatrix4(new THREE.Matrix4().makeTranslation(25, 0, 25))
+      flat.scale.set(25,25,25);
+      flat.position.x = 1 + 80 / 2.0;
+      flat.position.z = 1 + 80 / 2.0;
+      scene.add(flat);
+    },
+    undefined,
+    function (error) {
+      console.error(error);
+    }
+  );
 }
