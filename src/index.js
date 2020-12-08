@@ -1,9 +1,9 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Matrix4, Vector3 } from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import Flat from "./objects/Flat.gltf";
-import FlatImg from "./objects/HouseTexture1.png";
+// import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+// import Flat from "./objects/Flat.gltf";
+// import FlatImg from "./objects/HouseTexture1.png";
 var renderer, camera, scene, controls;
 var plane, cube;
 
@@ -433,39 +433,39 @@ function Building(Width, Height, Length, Mesh) {
 function random(min, max) {
   return min + Math.random() * (max - min);
 }
-function generateFlat() {
-  // var single = new THREE.Geometry();
-  var loader = new GLTFLoader();
+// function generateFlat() {
+//   // var single = new THREE.Geometry();
+//   var loader = new GLTFLoader();
 
-  var newMaterial = new THREE.MeshLambertMaterial({
-    color: 0xffffff,
-  });
-  var textureLoader = new THREE.TextureLoader();
-  var texture = textureLoader.load(FlatImg);
+//   var newMaterial = new THREE.MeshLambertMaterial({
+//     color: 0xffffff,
+//   });
+//   var textureLoader = new THREE.TextureLoader();
+//   var texture = textureLoader.load(FlatImg);
 
-  loader.load(
-    Flat,
-    function (gltf) {
-      var flat = gltf.scene.children[0];
+//   loader.load(
+//     Flat,
+//     function (gltf) {
+//       var flat = gltf.scene.children[0];
 
-      gltf.scene.traverse(function (child) {
-        if (child.isMesh) {
-          child.material = newMaterial;
-          child.material.map = texture;
-          child.receiveShadow = true;
-          child.castShadow = true;
-        }
-      });
-      flat.visible = true;
-      // flat.geometry.center()
-      // flat.geometry.applyMatrix4(new THREE.Matrix4().makeTranslation(25, 0, 25))
-      flat.scale.set(30, 30, 30);
-      // flat.position.x = 50;
-      scene.add(flat);
-    },
-    undefined,
-    function (error) {
-      console.error(error);
-    }
-  );
-}
+//       gltf.scene.traverse(function (child) {
+//         if (child.isMesh) {
+//           child.material = newMaterial;
+//           child.material.map = texture;
+//           child.receiveShadow = true;
+//           child.castShadow = true;
+//         }
+//       });
+//       flat.visible = true;
+//       // flat.geometry.center()
+//       // flat.geometry.applyMatrix4(new THREE.Matrix4().makeTranslation(25, 0, 25))
+//       flat.scale.set(30, 30, 30);
+//       // flat.position.x = 50;
+//       scene.add(flat);
+//     },
+//     undefined,
+//     function (error) {
+//       console.error(error);
+//     }
+//   );
+// }
