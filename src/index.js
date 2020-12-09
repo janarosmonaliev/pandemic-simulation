@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { WebGLRenderer, Scene, Camera } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Matrix4, Vector3 } from "three";
 // import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
@@ -6,8 +7,13 @@ import { Matrix4, Vector3 } from "three";
 // import FlatImg from "./objects/HouseTexture1.png";
 var renderer, camera, scene, controls;
 var plane, cube;
+var cityWidth = 1300;
+var cityLength = 1300;
+var t = 0;
+var pathsArray = []
 
 init();
+generateGraph();
 animate();
 
 function init() {
@@ -16,6 +22,7 @@ function init() {
   renderer.setClearColor(new THREE.Color(0xb0b0b0));
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.shadowMap.enabled = true;
+  // invalidation.then(() => renderer.dispose());
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   document.body.appendChild(renderer.domElement);
 
@@ -73,15 +80,6 @@ function init() {
   var light = new THREE.DirectionalLight(0xffffff, 0.8);
   light.position.set(-500, 1000, -300);
 
-  // NOTE Fix this issue
-  // light.shadow.camera = new THREE.OrthographicCamera(
-  //   -1000,
-  //   1000,
-  //   1000,
-  //   -1000,
-  //   0.5,
-  //   2000
-  // );
   light.shadow.camera.near = 50;
   light.shadow.camera.far = 2000;
   light.shadow.camera.left = -2000;
@@ -104,10 +102,7 @@ function init() {
   // scene.add(helper);
 
   // SECTION City Generation
-  scene.add(generateCity(1300, 1300));
-
-  // Reference Material
-  // generateFlat();
+  scene.add(generateCity(cityWidth, cityLength));
 
   camera.position.y = 1000;
   camera.position.z = 1000;
@@ -119,7 +114,7 @@ function init() {
 function animate() {
   requestAnimationFrame(animate);
   controls.update();
-  renderer.render(scene, camera);
+  render();
 }
 
 function onWindowResize() {
@@ -127,13 +122,13 @@ function onWindowResize() {
   camera.updateProjectionMatrix();
 
   renderer.setSize(window.innerWidth, window.innerHeight);
-  effect.setSize(window.innerWidth, window.innerHeight);
+  // effect.setSize(window.innerWidth, window.innerHeight);
 }
 
-function generateCity(width, length) {
+function generateCity(cityWidth, cityLength) {
   var districtMinSize = 50;
-  var gridWidth = Math.floor(width / districtMinSize);
-  var gridLength = Math.floor(length / districtMinSize);
+  var gridWidth = Math.floor(cityWidth / districtMinSize);
+  var gridLength = Math.floor(cityLength / districtMinSize);
   var cityGrid = generateCityGrid(gridWidth, gridLength, districtMinSize);
 
   // Creating districts
@@ -186,32 +181,6 @@ function generateCity(width, length) {
         // NOTE Deprecated function
         THREE.GeometryUtils.merge(cityGeometry, district);
         // cityGeometry.merge(district);
-
-        // SECTION Line Creation Test
-        for (var n = 0; n <= 5; n++) {
-          var points = [];
-          var lineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
-          points.push(new THREE.Vector3(25+250*n, 0, 25));
-          points.push(new Vector3(25+250*n, 0, 1300 - 25));
-          var lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
-          var line = new THREE.Line(lineGeometry, lineMaterial);
-          line.applyMatrix4(
-            new THREE.Matrix4().makeTranslation(-width / 2, 0, -length / 2)
-          );
-          scene.add(line);
-        }
-        for (var m = 0; m <= 5; m++) {
-          var points = [];
-          var lineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
-          points.push(new THREE.Vector3(25, 0, 25+250*m));
-          points.push(new Vector3(25+250*5, 0, 25+250*m));
-          var lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
-          var line = new THREE.Line(lineGeometry, lineMaterial);
-          line.applyMatrix4(
-            new THREE.Matrix4().makeTranslation(-width / 2, 0, -length / 2)
-          );
-          scene.add(line);
-        }
       }
     }
   }
@@ -224,7 +193,7 @@ function generateCity(width, length) {
   mesh.receiveShadow = true;
 
   mesh.applyMatrix4(
-    new THREE.Matrix4().makeTranslation(-width / 2, 0, -length / 2)
+    new THREE.Matrix4().makeTranslation(-cityWidth / 2, 0, -cityLength / 2)
   );
 
   return mesh;
@@ -273,7 +242,7 @@ function generateDistrictHeightRange() {
   return ranges[Math.floor(random(0, i))];
 }
 
-function generateDistrict(width, length, minHeight, maxHeight) {
+function generateDistrict(cityWidth, length, minHeight, maxHeight) {
   var districtGeometry = new THREE.Geometry();
   var rowWidth = 0;
   var rowLength = 0;
@@ -283,8 +252,8 @@ function generateDistrict(width, length, minHeight, maxHeight) {
     if (length - j < 45) break;
 
     var rowGeometry = new THREE.Geometry();
-    for (var i = 0; i < width; i += 5) {
-      if (width - i < 45) break;
+    for (var i = 0; i < cityWidth; i += 5) {
+      if (cityWidth - i < 45) break;
       var building = generateBuilding(length - j, minHeight, maxHeight);
 
       var floorWidth = Math.floor(80 / 5) * 5 + 5;
@@ -300,7 +269,7 @@ function generateDistrict(width, length, minHeight, maxHeight) {
     }
 
     rowGeometry.applyMatrix4(
-      new THREE.Matrix4().makeTranslation((width - rowWidth) / 2.0, 0, 0)
+      new THREE.Matrix4().makeTranslation((cityWidth - rowWidth) / 2.0, 0, 0)
     );
     // NOTE Deprecated
     THREE.GeometryUtils.merge(districtGeometry, rowGeometry);
@@ -317,7 +286,7 @@ function generateDistrict(width, length, minHeight, maxHeight) {
     new Matrix4().makeTranslation(0, 0, (length - totalLength) / 2.0)
   );
 
-  var planeGeometry = new THREE.PlaneGeometry(width, length);
+  var planeGeometry = new THREE.PlaneGeometry(cityWidth, length);
   var planeMaterial = new THREE.MeshLambertMaterial();
   var plane = new THREE.Mesh(planeGeometry, planeMaterial);
 
@@ -326,7 +295,7 @@ function generateDistrict(width, length, minHeight, maxHeight) {
   plane.geometry.faces[1].vertexColors = [planeColor, planeColor, planeColor];
 
   plane.rotation.x = -0.5 * Math.PI;
-  plane.position.x = width / 2;
+  plane.position.x = cityWidth / 2;
   plane.position.y = 1;
   plane.position.z = length / 2;
 
@@ -355,12 +324,12 @@ function generateBuilding(bldgMaxWidth, bldgMinHeight, bldgMaxHeight) {
       ? maxWidth
       : bldgMaxWidth;
 
-  var width = random(minWidth, bldgMaxWidth);
+  var cityWidth = random(minWidth, bldgMaxWidth);
   var height = random(bldgMinHeight, bldgMaxHeight);
-  var length = width;
+  var length = cityWidth;
 
   // Building creation
-  var geometry = new THREE.BoxGeometry(width, height, length);
+  var geometry = new THREE.BoxGeometry(cityWidth, height, length);
   geometry.applyMatrix4(new THREE.Matrix4().makeTranslation(0, height / 2, 0));
 
   var material = new THREE.MeshLambertMaterial({
@@ -420,7 +389,7 @@ function generateBuilding(bldgMaxWidth, bldgMinHeight, bldgMaxHeight) {
 
   mesh.geometry.faces = faces;
 
-  return new Building(width, height, length, mesh);
+  return new Building(cityWidth, height, length, mesh);
 }
 
 function Building(Width, Height, Length, Mesh) {
@@ -433,39 +402,81 @@ function Building(Width, Height, Length, Mesh) {
 function random(min, max) {
   return min + Math.random() * (max - min);
 }
-// function generateFlat() {
-//   // var single = new THREE.Geometry();
-//   var loader = new GLTFLoader();
 
-//   var newMaterial = new THREE.MeshLambertMaterial({
-//     color: 0xffffff,
-//   });
-//   var textureLoader = new THREE.TextureLoader();
-//   var texture = textureLoader.load(FlatImg);
+// SECTION City Graph Creation
+function generateGraph() {
+  // sphere will move along the path
+  var sphereMaterial = new THREE.MeshNormalMaterial();
+  var sphereGeometry = new THREE.BoxGeometry( 20, 20, 20);
+  
+  
+  var matrix = new THREE.Matrix4().makeTranslation(-cityWidth / 2, 0, -cityLength / 2);
+  
+  // create paths
+  for (var n = 0; n <= 5; n++) {
+    var pointsPath = new THREE.CurvePath();
+    var v1 = new THREE.Vector3(25 + 250 * n, 10, 25);
+    var v2 = new Vector3(25 + 250 * n, 10, 1300 - 25);
+    
+    v1.applyMatrix4(matrix);
+    v2.applyMatrix4(matrix);
+    
+    pointsPath.add(new THREE.LineCurve3(v1, v2));
+    var points = pointsPath.curves.reduce(
+      (p, d) => [...p, ...d.getPoints(20)],
+      []
+      );
+      
+      var lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+      var lineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
+      var road = new THREE.Line(lineGeometry, lineMaterial);
+      var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+      sphere.castShadow = true;
+      sphere.receiveShadow = true;
+    pathsArray.push({
+      line: road,
+      points: pointsPath,
+      sphere: sphere,
+    });
+  }
+  for (var m = 0; m <= 5; m++) {
+    var pointsPath = new THREE.CurvePath();
+    var h1 = (new THREE.Vector3(25, 10, 25+250*m));
+    var h2 = (new Vector3(25+250*5, 10, 25+250*m));
+    
+    h1.applyMatrix4(matrix);
+    h2.applyMatrix4(matrix);
+    
+    pointsPath.add(new THREE.LineCurve3(h1, h2));
+    var points = pointsPath.curves.reduce(
+      (p, d) => [...p, ...d.getPoints(20)],
+      []
+      );
+      
+      var lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+      var lineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
+      var road = new THREE.Line(lineGeometry, lineMaterial);
+      var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+      sphere.castShadow = true;
+      sphere.receiveShadow = true;
+    pathsArray.push({
+      line: road,
+      points: pointsPath,
+      sphere: sphere,
+    });
+  }
+  pathsArray.forEach((d) => {
+    scene.add(d.line);
+    scene.add(d.sphere);
+  });
 
-//   loader.load(
-//     Flat,
-//     function (gltf) {
-//       var flat = gltf.scene.children[0];
+}
 
-//       gltf.scene.traverse(function (child) {
-//         if (child.isMesh) {
-//           child.material = newMaterial;
-//           child.material.map = texture;
-//           child.receiveShadow = true;
-//           child.castShadow = true;
-//         }
-//       });
-//       flat.visible = true;
-//       // flat.geometry.center()
-//       // flat.geometry.applyMatrix4(new THREE.Matrix4().makeTranslation(25, 0, 25))
-//       flat.scale.set(30, 30, 30);
-//       // flat.position.x = 50;
-//       scene.add(flat);
-//     },
-//     undefined,
-//     function (error) {
-//       console.error(error);
-//     }
-//   );
-// }
+function render(){
+  pathsArray.forEach((e) => {
+    var newPos = e.points.getPoint(t);
+    e.sphere.position.set(newPos.x, newPos.y, newPos.z);
+  });
+  t = (t+0.001 >= 1) ? 0 : t + 0.001;
+  renderer.render( scene, camera );
+}
