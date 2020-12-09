@@ -34,7 +34,7 @@ I was inspired by [That French Game Dev](https://thatfrenchgamedev.com/)'s algor
 
 ![Image of a generated city in 3D space](https://janarosmonaliev.github.io/research-simulations/src/images/generated-city-2.png)
 
-### [Live demo](https://janarosmonaliev.github.io/research-simulations/dist/)
+### [Live demo](https://janarosmonaliev.github.io/research-simulations/)
 
 ## Usage
 
