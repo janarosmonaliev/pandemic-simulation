@@ -25,13 +25,11 @@ module.exports = {
     rules: [
       {
         test: /\.(png|jpe?g|gltf|bin|zip)$/i,
-        loader: 'file-loader',
+        loader: "file-loader",
         options: {
-          name: '[path][name].[ext]',
+          name: "[path][name].[ext]",
           outputPath: "./assets",
-
-
-        }
+        },
       },
     ],
   },

@@ -4,7 +4,7 @@ const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 
 module.exports = {
   mode: "production",
-  entry: "./src/index.js",
+  entry: ["./src/index.js"],
   devtool: "source-map",
   devServer: {
     contentBase: "./",
@@ -23,13 +23,11 @@ module.exports = {
     rules: [
       {
         test: /\.(png|jpe?g|gltf)$/i,
-        loader: 'file-loader',
+        loader: "file-loader",
         options: {
-          name: '[path][name].[ext]',
+          name: "[path][name].[ext]",
           outputPath: "./assets",
-
-
-        }
+        },
       },
     ],
   },

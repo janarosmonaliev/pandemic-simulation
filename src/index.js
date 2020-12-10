@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { WebGLRenderer, Scene, Camera } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Matrix4, Vector3 } from "three";
+import * as dat from "dat.gui";
 // import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 // import Flat from "./objects/Flat.gltf";
 // import FlatImg from "./objects/HouseTexture1.png";
@@ -11,13 +12,41 @@ var cityWidth = 1300;
 var cityLength = 1300;
 var t = 0;
 var pathsArray = [];
-var peopleCount = 50;
 var isBlobGoingBack = false;
+var daysPassed = 0;
+var probability = function (n) {
+  return !!n && Math.random() * 100 <= n;
+};
+var showPaths = false;
+const control = {
+  play: true,
+  tSpeed: 0.001,
+  peopleCount: 50,
+  infectedBlobs: 10,
+  contactedWithBlobs: 10,
+  infectionChance: 1,
+  showPaths: false,
+  reload: function () {
+    this.play = false;
+    resetBlobs();
+    pathsArray = [];
+    generatePopulation();
+    this.play = true;
+  },
+  stopAnimation: function () {
+    this.play = !this.play;
+    if (this.play) animate();
+  },
+};
+
 init();
 generatePopulation();
+initControls();
+
 animate();
 
 function init() {
+  document.querySelector(".counter").innerHTML = control.infectedBlobs;
   // SECTION: Renderer
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setClearColor(new THREE.Color(0xb0b0b0));
@@ -30,7 +59,7 @@ function init() {
   // SECTION: Scene & Camera
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(
-    60,
+    75,
     window.innerWidth / window.innerHeight,
     0.1,
     15000
@@ -57,7 +86,7 @@ function init() {
   });
   var skyBox = new THREE.Mesh(skyBoxGeometry, skyBoxMaterial);
   scene.add(skyBox);
-  scene.fog = new THREE.Fog(skyBoxMaterial.color, 1500, 4000);
+  scene.fog = new THREE.Fog(skyBoxMaterial.color, 1000, 4000);
 
   // NOTE: Plane
   var planeGeometry = new THREE.PlaneBufferGeometry(1300, 1300);
@@ -95,8 +124,8 @@ function init() {
   scene.add(light);
 
   // Helpers
-  const axesHelper = new THREE.AxesHelper(800);
-  scene.add(axesHelper);
+  // const axesHelper = new THREE.AxesHelper(800);
+  // scene.add(axesHelper);
   // var helperCamera = new THREE.CameraHelper(light.shadow.camera);
   // scene.add(helperCamera);
   // var helper = new THREE.DirectionalLightHelper(light, 10, 0xff1c1c);
@@ -105,14 +134,24 @@ function init() {
   // SECTION City Generation
   scene.add(generateCity(cityWidth, cityLength));
 
-  camera.position.y = 1000;
-  camera.position.z = 1000;
-  camera.position.x = 1000;
+  camera.position.y = 1300;
+  camera.position.z = 600;
+  camera.position.x = 0;
 
   window.addEventListener("resize", onWindowResize, false);
 }
 
+function resetBlobs() {
+  pathsArray.forEach((e) => {
+    e.sphere.parent.remove(e.sphere);
+  });
+  pathsArray = null;
+  pathsArray = [];
+}
+
 function animate() {
+  if (!control.play) return;
+
   requestAnimationFrame(animate);
   controls.update();
   render();
@@ -196,7 +235,7 @@ function generateCity(cityWidth, cityLength) {
   mesh.applyMatrix4(
     new THREE.Matrix4().makeTranslation(-cityWidth / 2, 0, -cityLength / 2)
   );
-
+  mesh.matrixAutoUpdate = false;
   return mesh;
 }
 
@@ -243,7 +282,7 @@ function generateDistrictHeightRange() {
   return ranges[randomInt(0, i)];
 }
 
-function generateDistrict(cityWidth, length, minHeight, maxHeight) {
+function generateDistrict(width, length, minHeight, maxHeight) {
   var districtGeometry = new THREE.Geometry();
   var rowWidth = 0;
   var rowLength = 0;
@@ -253,8 +292,8 @@ function generateDistrict(cityWidth, length, minHeight, maxHeight) {
     if (length - j < 45) break;
 
     var rowGeometry = new THREE.Geometry();
-    for (var i = 0; i < cityWidth; i += 5) {
-      if (cityWidth - i < 45) break;
+    for (var i = 0; i < width; i += 5) {
+      if (width - i < 45) break;
       var building = generateBuilding(length - j, minHeight, maxHeight);
 
       var floorWidth = Math.floor(80 / 5) * 5 + 5;
@@ -270,7 +309,7 @@ function generateDistrict(cityWidth, length, minHeight, maxHeight) {
     }
 
     rowGeometry.applyMatrix4(
-      new THREE.Matrix4().makeTranslation((cityWidth - rowWidth) / 2.0, 0, 0)
+      new THREE.Matrix4().makeTranslation((width - rowWidth) / 2.0, 0, 0)
     );
     // NOTE Deprecated
     THREE.GeometryUtils.merge(districtGeometry, rowGeometry);
@@ -287,7 +326,7 @@ function generateDistrict(cityWidth, length, minHeight, maxHeight) {
     new Matrix4().makeTranslation(0, 0, (length - totalLength) / 2.0)
   );
 
-  var planeGeometry = new THREE.PlaneGeometry(cityWidth, length);
+  var planeGeometry = new THREE.PlaneGeometry(width, length);
   var planeMaterial = new THREE.MeshLambertMaterial();
   var plane = new THREE.Mesh(planeGeometry, planeMaterial);
 
@@ -296,7 +335,7 @@ function generateDistrict(cityWidth, length, minHeight, maxHeight) {
   plane.geometry.faces[1].vertexColors = [planeColor, planeColor, planeColor];
 
   plane.rotation.x = -0.5 * Math.PI;
-  plane.position.x = cityWidth / 2;
+  plane.position.x = width / 2;
   plane.position.y = 1;
   plane.position.z = length / 2;
 
@@ -325,12 +364,12 @@ function generateBuilding(bldgMaxWidth, bldgMinHeight, bldgMaxHeight) {
       ? maxWidth
       : bldgMaxWidth;
 
-  var cityWidth = random(minWidth, bldgMaxWidth);
+  var width = random(minWidth, bldgMaxWidth);
   var height = random(bldgMinHeight, bldgMaxHeight);
-  var length = cityWidth;
+  var length = width;
 
   // Building creation
-  var geometry = new THREE.BoxGeometry(cityWidth, height, length);
+  var geometry = new THREE.BoxGeometry(width, height, length);
   geometry.applyMatrix4(new THREE.Matrix4().makeTranslation(0, height / 2, 0));
 
   var material = new THREE.MeshLambertMaterial({
@@ -390,7 +429,7 @@ function generateBuilding(bldgMaxWidth, bldgMinHeight, bldgMaxHeight) {
 
   mesh.geometry.faces = faces;
 
-  return new Building(cityWidth, height, length, mesh);
+  return new Building(width, height, length, mesh);
 }
 
 function Building(Width, Height, Length, Mesh) {
@@ -410,17 +449,20 @@ function randomInt(min, max) {
 
 // SECTION City Graph Creation
 function generatePopulation() {
-  for (var i = 0; i < peopleCount; i++) {
+  for (var i = 0; i < control.peopleCount; i++) {
     var src = randomHouse();
     var dst = randomHouse();
     generatePath(src, dst);
   }
   pathsArray.forEach((e) => {
-    scene.add(e.line);
+    if (control.showPaths) scene.add(e.line);
     scene.add(e.sphere);
   });
+  for (var i = 0; i < control.infectedBlobs; i++) {
+    pathsArray[i].sphere.material.color = new THREE.Color(0xef233c);
+    pathsArray[i].isInfected = true;
+  }
 }
-
 function generatePath(src, dst) {
   var matrix = new THREE.Matrix4().makeTranslation(
     -cityWidth / 2,
@@ -436,16 +478,22 @@ function generatePath(src, dst) {
 
   var s1 = new THREE.Vector3(25 + 250 * (srcX - 1), 5, 25 + 250 * (srcY - 1));
   s1.setX(isHouseLeft(src[1]) ? s1.x : s1.x + 250);
-  s1.setZ(isHouseUpper(src[1]) ? s1.z + 55 : s1.z + 95);
+  s1.setZ(isHouseUpper(src[1]) ? s1.z + 80 : s1.z + 170);
+  var s01 = new THREE.Vector3(25 + 250 * (srcX - 1), 5, s1.z);
+  s01.setX(isHouseLeft(src[1]) ? s1.x + 80 : s1.x - 80);
   var s2 = new THREE.Vector3(s1.x, 5, 25 + 250 * srcY);
 
   var d1 = new THREE.Vector3(25 + 250 * (dstX - 1), 5, 25 + 250 * (dstY - 1));
   d1.setX(isHouseLeft(dst[1]) ? d1.x : d1.x + 250);
-  d1.setZ(isHouseUpper(dst[1]) ? d1.z + 55 : d1.z + 95);
+  d1.setZ(isHouseUpper(dst[1]) ? d1.z + 80 : d1.z + 170);
+  var d01 = new THREE.Vector3(25 + 250 * (dstX - 1), 5, d1.z);
+  d01.setX(isHouseLeft(dst[1]) ? d1.x + 80 : d1.x - 80);
   var d2 = new THREE.Vector3(d1.x, 5, 25 + 250 * dstY);
 
   var m1 = new THREE.Vector3(25 + 250 * (randomInt(srcX, dstX) - 1), 5, s2.z);
   var m2 = new THREE.Vector3(m1.x, 5, d2.z);
+  s01.applyMatrix4(matrix);
+  d01.applyMatrix4(matrix);
   s1.applyMatrix4(matrix);
   s2.applyMatrix4(matrix);
   d1.applyMatrix4(matrix);
@@ -453,11 +501,13 @@ function generatePath(src, dst) {
   m1.applyMatrix4(matrix);
   m2.applyMatrix4(matrix);
 
+  pointsPath.add(new THREE.LineCurve3(s01, s1));
   pointsPath.add(new THREE.LineCurve3(s1, s2));
   pointsPath.add(new THREE.LineCurve3(s2, m1));
   pointsPath.add(new THREE.LineCurve3(m1, m2));
   pointsPath.add(new THREE.LineCurve3(m2, d2));
   pointsPath.add(new THREE.LineCurve3(d2, d1));
+  pointsPath.add(new THREE.LineCurve3(d1, d01));
   var points = pointsPath.curves.reduce(
     (p, d) => [...p, ...d.getPoints(20)],
     []
@@ -466,18 +516,25 @@ function generatePath(src, dst) {
   var lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
   var lineMaterial = new THREE.LineBasicMaterial({ color: 0xfff2af });
   var road = new THREE.Line(lineGeometry, lineMaterial);
+  road.castShadow = true;
 
   pathsArray.push({
     line: road,
     points: pointsPath,
     sphere: generateBlob(),
+    isInfected: false,
   });
 }
 
 function generateBlob() {
-  var geometry = new THREE.SphereGeometry(10, 32, 32);
-  var material = new THREE.MeshBasicMaterial({ color: 0x3792cb });
+  var geometry = new THREE.SphereGeometry(8, 32, 32);
+  var material = new THREE.MeshBasicMaterial({
+    color: 0x3792cb,
+    transparent: true,
+    opacity: 0.9,
+  });
   var sphere = new THREE.Mesh(geometry, material);
+  sphere.name = "blob";
   sphere.castShadow = true;
   sphere.receiveShadow = true;
   return sphere;
@@ -506,11 +563,60 @@ function render() {
     var newPos = e.points.getPoint(t);
     e.sphere.position.set(newPos.x, newPos.y, newPos.z);
   });
-  if (t - 0.001 <= 0 && isBlobGoingBack) {
+  if (t - control.tSpeed <= 0 && isBlobGoingBack) {
     isBlobGoingBack = false;
-  } else if (t + 0.001 >= 1 && !isBlobGoingBack) {
+    daysPassed += 1;
+    infectBlobs();
+  } else if (t + control.tSpeed >= 1 && !isBlobGoingBack) {
     isBlobGoingBack = true;
   }
-  t = isBlobGoingBack ? t - 0.001 : t + 0.001;
+  t = isBlobGoingBack ? t - control.tSpeed : t + control.tSpeed;
   renderer.render(scene, camera);
+}
+
+function infectBlobs() {
+  var initInfectedBlobs = control.infectedBlobs;
+  for (var i = 0; i < initInfectedBlobs; i++) {
+    for (var j = 1; j < control.contactedWithBlobs; j++) {
+      if (probability(control.infectionChance)) {
+        var blobIndex = randomInt(0, pathsArray.length - 1);
+        if (pathsArray[blobIndex].isInfected == false) {
+          pathsArray[blobIndex].sphere.material.color = new THREE.Color(
+            0xef233c
+          );
+          pathsArray[blobIndex].isInfected = true;
+          control.infectedBlobs += 1;
+          document.querySelector(".counter").innerHTML = control.infectedBlobs;
+        }
+      }
+    }
+  }
+}
+
+function initControls() {
+  var gui = new dat.GUI({ width: 500 });
+  var populationSetings = gui.addFolder("Population");
+  populationSetings
+    .add(control, "peopleCount", 50, 500, 2)
+    .name("Population (Reload)");
+  populationSetings
+    .add(control, "tSpeed", 0.0005, 0.01, 0.000095)
+    .name("Blob Speed");
+  populationSetings.open();
+
+  var infectionSettings = gui.addFolder("Disease Spread");
+  infectionSettings
+    .add(control, "infectedBlobs", 1, 50, 1)
+    .name("Infected Blobs");
+  infectionSettings
+    .add(control, "infectionChance", 1, 50, 1)
+    .name("Infection Chance (%)");
+  infectionSettings
+    .add(control, "contactedWithBlobs", 1, 50, 1)
+    .name("Physical contacts per blob");
+  var controls = gui.addFolder("Controls");
+  controls.add(control, "showPaths").name("Show paths (Reload)");
+  controls.add(control, "stopAnimation").name("Play/Stop Simulation");
+  controls.add(control, "reload").name("Reload");
+  controls.open();
 }
