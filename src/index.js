@@ -10,10 +10,11 @@ var plane, cube;
 var cityWidth = 1300;
 var cityLength = 1300;
 var t = 0;
-var pathsArray = []
-
+var pathsArray = [];
+var peopleCount = 50;
+var isBlobGoingBack = false;
 init();
-generateGraph();
+generatePopulation();
 animate();
 
 function init() {
@@ -63,7 +64,7 @@ function init() {
   // NOTE Shift the plane
   // planeGeometry.applyMatrix4(new THREE.Matrix4().makeTranslation(50, -50, 0));
   var planeMaterial = new THREE.MeshStandardMaterial({
-    color: 0xa1a1a1,
+    color: 0x474747,
     polygonOffset: true,
     polygonOffsetFactor: 5,
     side: THREE.DoubleSide,
@@ -290,7 +291,7 @@ function generateDistrict(cityWidth, length, minHeight, maxHeight) {
   var planeMaterial = new THREE.MeshLambertMaterial();
   var plane = new THREE.Mesh(planeGeometry, planeMaterial);
 
-  var planeColor = new THREE.Color(0xb8b8b8);
+  var planeColor = new THREE.Color(0x00ab66);
   plane.geometry.faces[0].vertexColors = [planeColor, planeColor, planeColor];
   plane.geometry.faces[1].vertexColors = [planeColor, planeColor, planeColor];
 
@@ -404,79 +405,100 @@ function random(min, max) {
 }
 
 // SECTION City Graph Creation
-function generateGraph() {
-  // sphere will move along the path
-  var sphereMaterial = new THREE.MeshNormalMaterial();
-  var sphereGeometry = new THREE.BoxGeometry( 20, 20, 20);
-  
-  
-  var matrix = new THREE.Matrix4().makeTranslation(-cityWidth / 2, 0, -cityLength / 2);
-  
-  // create paths
-  for (var n = 0; n <= 5; n++) {
-    var pointsPath = new THREE.CurvePath();
-    var v1 = new THREE.Vector3(25 + 250 * n, 10, 25);
-    var v2 = new Vector3(25 + 250 * n, 10, 1300 - 25);
-    
-    v1.applyMatrix4(matrix);
-    v2.applyMatrix4(matrix);
-    
-    pointsPath.add(new THREE.LineCurve3(v1, v2));
-    var points = pointsPath.curves.reduce(
-      (p, d) => [...p, ...d.getPoints(20)],
-      []
-      );
-      
-      var lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
-      var lineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
-      var road = new THREE.Line(lineGeometry, lineMaterial);
-      var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-      sphere.castShadow = true;
-      sphere.receiveShadow = true;
-    pathsArray.push({
-      line: road,
-      points: pointsPath,
-      sphere: sphere,
-    });
+function generatePopulation() {
+  for (var i = 0; i < peopleCount; i++) {
+    var src = randomHouse();
+    var dst = randomHouse();
+    generatePath(src, dst);
   }
-  for (var m = 0; m <= 5; m++) {
-    var pointsPath = new THREE.CurvePath();
-    var h1 = (new THREE.Vector3(25, 10, 25+250*m));
-    var h2 = (new Vector3(25+250*5, 10, 25+250*m));
-    
-    h1.applyMatrix4(matrix);
-    h2.applyMatrix4(matrix);
-    
-    pointsPath.add(new THREE.LineCurve3(h1, h2));
-    var points = pointsPath.curves.reduce(
-      (p, d) => [...p, ...d.getPoints(20)],
-      []
-      );
-      
-      var lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
-      var lineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
-      var road = new THREE.Line(lineGeometry, lineMaterial);
-      var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-      sphere.castShadow = true;
-      sphere.receiveShadow = true;
-    pathsArray.push({
-      line: road,
-      points: pointsPath,
-      sphere: sphere,
-    });
-  }
-  pathsArray.forEach((d) => {
-    scene.add(d.line);
-    scene.add(d.sphere);
+  pathsArray.forEach((e) => {
+    scene.add(e.line);
+    scene.add(e.sphere);
   });
-
 }
 
-function render(){
+function generatePath(src, dst) {
+  var matrix = new THREE.Matrix4().makeTranslation(
+    -cityWidth / 2,
+    0,
+    -cityLength / 2
+  );
+  var pointsPath = new THREE.CurvePath();
+
+  var srcX = src[0] % 5 == 0 ? 5 : src[0] % 5;
+  var srcY = src[0] % 5 == 0 ? src[0] / 5 : Math.floor(src[0] / 5) + 1;
+  var dstX = dst[0] % 5 == 0 ? 5 : dst[0] % 5;
+  var dstY = dst[0] % 5 == 0 ? dst[0] / 5 : Math.floor(dst[0] / 5) + 1;
+
+  var s1 = new THREE.Vector3(25 + 250 * (srcX - 1), 5, 25 + 250 * (srcY - 1));
+  s1.setX(isHouseLeft(src[1]) ? s1.x : s1.x + 250);
+  s1.setZ(isHouseUpper(src[1]) ? s1.z + 55 : s1.z + 95);
+  var s2 = new THREE.Vector3(s1.x, 5, 25 + 250 * srcY);
+
+  var d1 = new THREE.Vector3(25 + 250 * (dstX - 1), 5, 25 + 250 * (dstY - 1));
+  d1.setX(isHouseLeft(dst[1]) ? d1.x : d1.x + 250);
+  d1.setZ(isHouseUpper(dst[1]) ? d1.z + 55 : d1.z + 95);
+  var d2 = new THREE.Vector3(d1.x, 5, s2.z);
+  s1.applyMatrix4(matrix);
+  s2.applyMatrix4(matrix);
+  d1.applyMatrix4(matrix);
+  d2.applyMatrix4(matrix);
+
+  pointsPath.add(new THREE.LineCurve3(s1, s2));
+  pointsPath.add(new THREE.LineCurve3(s2, d2));
+  pointsPath.add(new THREE.LineCurve3(d2, d1));
+  var points = pointsPath.curves.reduce(
+    (p, d) => [...p, ...d.getPoints(20)],
+    []
+  );
+
+  var lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+  var lineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
+  var road = new THREE.Line(lineGeometry, lineMaterial);
+
+  pathsArray.push({
+    line: road,
+    points: pointsPath,
+    sphere: generateBlob(),
+  });
+}
+
+function generateBlob() {
+  var geometry = new THREE.SphereGeometry(10, 32, 32);
+  var material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  var sphere = new THREE.Mesh(geometry, material);
+  sphere.castShadow = true;
+  return sphere;
+}
+
+function randomHouse() {
+  return [
+    Math.floor(Math.random() * Math.floor(25)) + 1,
+    Math.floor(Math.random() * Math.floor(4)) + 1,
+  ];
+}
+
+function isHouseLeft(index) {
+  if (index % 2 == 1) {
+    return true;
+  } else return false;
+}
+function isHouseUpper(index) {
+  if (index <= 2) {
+    return true;
+  } else return false;
+}
+
+function render() {
   pathsArray.forEach((e) => {
     var newPos = e.points.getPoint(t);
     e.sphere.position.set(newPos.x, newPos.y, newPos.z);
   });
-  t = (t+0.001 >= 1) ? 0 : t + 0.001;
-  renderer.render( scene, camera );
+  if (t - 0.001 <= 0 && isBlobGoingBack) {
+    isBlobGoingBack = false;
+  } else if (t + 0.001 >= 1 && !isBlobGoingBack) {
+    isBlobGoingBack = true;
+  }
+  t = isBlobGoingBack ? t - 0.001 : t + 0.001;
+  renderer.render(scene, camera);
 }
