@@ -95,7 +95,7 @@ function init() {
   scene.add(light);
 
   // Helpers
-  const axesHelper = new THREE.AxesHelper(1000);
+  const axesHelper = new THREE.AxesHelper(800);
   scene.add(axesHelper);
   // var helperCamera = new THREE.CameraHelper(light.shadow.camera);
   // scene.add(helperCamera);
@@ -235,12 +235,12 @@ function generateDistrictHeightRange() {
   var ranges = new Array();
   var i = 0;
   // ranges[i++] = new THREE.Vector2(30, 60); // Very small
-  ranges[i++] = new THREE.Vector2(50, 90); // Small
+  // ranges[i++] = new THREE.Vector2(50, 90); // Small
   ranges[i++] = new THREE.Vector2(80, 130); // Medium
   ranges[i++] = new THREE.Vector2(100, 200); // Medium-tall
   ranges[i++] = new THREE.Vector2(90, 250); // Tall
 
-  return ranges[Math.floor(random(0, i))];
+  return ranges[randomInt(0, i)];
 }
 
 function generateDistrict(cityWidth, length, minHeight, maxHeight) {
@@ -291,7 +291,7 @@ function generateDistrict(cityWidth, length, minHeight, maxHeight) {
   var planeMaterial = new THREE.MeshLambertMaterial();
   var plane = new THREE.Mesh(planeGeometry, planeMaterial);
 
-  var planeColor = new THREE.Color(0x00ab66);
+  var planeColor = new THREE.Color(0xc8c8c8);
   plane.geometry.faces[0].vertexColors = [planeColor, planeColor, planeColor];
   plane.geometry.faces[1].vertexColors = [planeColor, planeColor, planeColor];
 
@@ -404,6 +404,10 @@ function random(min, max) {
   return min + Math.random() * (max - min);
 }
 
+function randomInt(min, max) {
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+
 // SECTION City Graph Creation
 function generatePopulation() {
   for (var i = 0; i < peopleCount; i++) {
@@ -438,14 +442,21 @@ function generatePath(src, dst) {
   var d1 = new THREE.Vector3(25 + 250 * (dstX - 1), 5, 25 + 250 * (dstY - 1));
   d1.setX(isHouseLeft(dst[1]) ? d1.x : d1.x + 250);
   d1.setZ(isHouseUpper(dst[1]) ? d1.z + 55 : d1.z + 95);
-  var d2 = new THREE.Vector3(d1.x, 5, s2.z);
+  var d2 = new THREE.Vector3(d1.x, 5, 25 + 250 * dstY);
+
+  var m1 = new THREE.Vector3(25 + 250 * (randomInt(srcX, dstX) - 1), 5, s2.z);
+  var m2 = new THREE.Vector3(m1.x, 5, d2.z);
   s1.applyMatrix4(matrix);
   s2.applyMatrix4(matrix);
   d1.applyMatrix4(matrix);
   d2.applyMatrix4(matrix);
+  m1.applyMatrix4(matrix);
+  m2.applyMatrix4(matrix);
 
   pointsPath.add(new THREE.LineCurve3(s1, s2));
-  pointsPath.add(new THREE.LineCurve3(s2, d2));
+  pointsPath.add(new THREE.LineCurve3(s2, m1));
+  pointsPath.add(new THREE.LineCurve3(m1, m2));
+  pointsPath.add(new THREE.LineCurve3(m2, d2));
   pointsPath.add(new THREE.LineCurve3(d2, d1));
   var points = pointsPath.curves.reduce(
     (p, d) => [...p, ...d.getPoints(20)],
@@ -453,7 +464,7 @@ function generatePath(src, dst) {
   );
 
   var lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
-  var lineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
+  var lineMaterial = new THREE.LineBasicMaterial({ color: 0xfff2af });
   var road = new THREE.Line(lineGeometry, lineMaterial);
 
   pathsArray.push({
@@ -465,9 +476,10 @@ function generatePath(src, dst) {
 
 function generateBlob() {
   var geometry = new THREE.SphereGeometry(10, 32, 32);
-  var material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  var material = new THREE.MeshBasicMaterial({ color: 0x3792cb });
   var sphere = new THREE.Mesh(geometry, material);
   sphere.castShadow = true;
+  sphere.receiveShadow = true;
   return sphere;
 }
 
