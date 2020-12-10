@@ -10,15 +10,20 @@
       canvas {
         display: block;
       }
-      .counter{
+      .counter-wrapper{
         position: absolute;
         z-index: 999;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 24px;
+        padding: 1em;
+      }
+      .counter{
+        color: #ef233c;
       }
     </style>
-    <link href="https://raw.githubusercontent.com/HubSpot/odometer/master/themes/odometer-theme-plaza.css" rel="stylesheet">
   </head>
   <body>
-    <div class="odometer counter">0</div>
+    <div class="counter-wrapper">Total confirmed cases: <span class="counter">0</span></div>
     <!-- Local Module -->
     <!-- <script src="js/three.js"></script> -->
 
@@ -27,11 +32,5 @@
       import * as THREE from "https://unpkg.com/three@<VERSION>/build/three.module.js";
     </script> -->
     <script src="./main.js"></script>
-    <script src="https://raw.githubusercontent.com/HubSpot/odometer/v0.4.6/odometer.min.js"></script>
-    <script>
-      window.odometerOptions = {
-        format: '(000)'
-      }
-    </script>
   </body>
 </html>
