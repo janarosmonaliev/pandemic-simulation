@@ -21,7 +21,7 @@ var showPaths = false;
 const control = {
   play: true,
   tSpeed: 0.001,
-  peopleCount: 50,
+  peopleCount: 200,
   infectedBlobs: 10,
   contactedWithBlobs: 10,
   infectionChance: 1,
