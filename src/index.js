@@ -3,9 +3,9 @@ import { WebGLRenderer, Scene, Camera } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Matrix4, Vector3 } from "three";
 import * as dat from "dat.gui";
-// import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-// import Flat from "./objects/Flat.gltf";
-// import FlatImg from "./objects/HouseTexture1.png";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import Flat from "./objects/Flat.gltf";
+import FlatImg from "./objects/HouseTexture1.png";
 var renderer, camera, scene, controls;
 var plane, cube;
 var cityWidth = 1300;
@@ -21,10 +21,10 @@ var showPaths = false;
 const control = {
   play: true,
   tSpeed: 0.001,
-  peopleCount: 200,
+  peopleCount: 100,
   infectedBlobs: 10,
   contactedWithBlobs: 10,
-  infectionChance: 1,
+  infectionChance: 5,
   showPaths: false,
   reload: function () {
     this.play = false;
@@ -165,79 +165,79 @@ function onWindowResize() {
   // effect.setSize(window.innerWidth, window.innerHeight);
 }
 
-function generateCity(cityWidth, cityLength) {
-  var districtMinSize = 50;
-  var gridWidth = Math.floor(cityWidth / districtMinSize);
-  var gridLength = Math.floor(cityLength / districtMinSize);
-  var cityGrid = generateCityGrid(gridWidth, gridLength, districtMinSize);
+// function generateCity(cityWidth, cityLength) {
+//   var districtMinSize = 50;
+//   var gridWidth = Math.floor(cityWidth / districtMinSize);
+//   var gridLength = Math.floor(cityLength / districtMinSize);
+//   var cityGrid = generateCityGrid(gridWidth, gridLength, districtMinSize);
 
-  // Creating districts
-  var cityGeometry = new THREE.Geometry();
-  var value = 0;
+//   // Creating districts
+//   var cityGeometry = new THREE.Geometry();
+//   var value = 0;
 
-  for (var i = 0; i < gridWidth; i++) {
-    for (var j = 0; j < gridLength; j++) {
-      if (cityGrid[i][j] == value) {
-        for (var k = i; k < gridWidth; k++) {
-          if (cityGrid[k][j] != value) {
-            break;
-          }
-        }
-        var districtWidth = k - i;
+//   for (var i = 0; i < gridWidth; i++) {
+//     for (var j = 0; j < gridLength; j++) {
+//       if (cityGrid[i][j] == value) {
+//         for (var k = i; k < gridWidth; k++) {
+//           if (cityGrid[k][j] != value) {
+//             break;
+//           }
+//         }
+//         var districtWidth = k - i;
 
-        for (var k = j + 1; k < gridLength; k++) {
-          if (cityGrid[i][k] != value) {
-            break;
-          }
-        }
-        var districtLength = k - j;
+//         for (var k = j + 1; k < gridLength; k++) {
+//           if (cityGrid[i][k] != value) {
+//             break;
+//           }
+//         }
+//         var districtLength = k - j;
 
-        for (var k = 0; k < districtWidth; k++) {
-          for (var l = 0; l < districtLength; l++) {
-            cityGrid[k + i][l + j] = 1;
-          }
-        }
+//         for (var k = 0; k < districtWidth; k++) {
+//           for (var l = 0; l < districtLength; l++) {
+//             cityGrid[k + i][l + j] = 1;
+//           }
+//         }
 
-        districtWidth *= districtMinSize;
-        districtLength *= districtMinSize;
+//         districtWidth *= districtMinSize;
+//         districtLength *= districtMinSize;
 
-        var districtHeight = generateDistrictHeightRange();
+//         var districtHeight = generateDistrictHeightRange();
 
-        // console.log("District. Width: " + districtWidth + " Length " + districtLength)
-        var district = generateDistrict(
-          districtWidth,
-          districtLength,
-          districtHeight.x,
-          districtHeight.y
-        );
-        district.applyMatrix4(
-          new THREE.Matrix4().makeTranslation(
-            i * districtMinSize,
-            0,
-            j * districtMinSize
-          )
-        );
+//         // console.log("District. Width: " + districtWidth + " Length " + districtLength)
+//         var district = generateDistrict(
+//           districtWidth,
+//           districtLength,
+//           districtHeight.x,
+//           districtHeight.y
+//         );
+//         district.applyMatrix4(
+//           new THREE.Matrix4().makeTranslation(
+//             i * districtMinSize,
+//             0,
+//             j * districtMinSize
+//           )
+//         );
 
-        // NOTE Deprecated function
-        THREE.GeometryUtils.merge(cityGeometry, district);
-        // cityGeometry.merge(district);
-      }
-    }
-  }
+//         // NOTE Deprecated function
+//         THREE.GeometryUtils.merge(cityGeometry, district);
+//         // cityGeometry.merge(district);
+//       }
+//     }
+//   }
 
-  var material = new THREE.MeshLambertMaterial({
-    vertexColors: THREE.VertexColors,
-  });
-  var mesh = new THREE.Mesh(cityGeometry, material);
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
+//   var material = new THREE.MeshLambertMaterial({
+//     vertexColors: THREE.VertexColors,
+//   });
+//   var mesh = new THREE.Mesh(cityGeometry, material);
+//   mesh.castShadow = true;
+//   mesh.receiveShadow = true;
 
-  mesh.applyMatrix4(
-    new THREE.Matrix4().makeTranslation(-cityWidth / 2, 0, -cityLength / 2)
-  );
-  mesh.matrixAutoUpdate = false;
-  return mesh;
-}
+//   mesh.applyMatrix4(
+//     new THREE.Matrix4().makeTranslation(-cityWidth / 2, 0, -cityLength / 2)
+//   );
+//   mesh.matrixAutoUpdate = false;
+//   return mesh;
+// }
 
 function generateCityGrid(gridWidth, gridLength, districtMinSize) {
   var cityGrid = new Array();
@@ -437,6 +437,70 @@ function Building(Width, Height, Length, Mesh) {
   this.Height = Height;
   this.Length = Length;
   this.Mesh = Mesh;
+}
+
+function generateCity(cityWidth, cityLength) {
+  var blockSize = 50;
+  var xDistricts = Math.floor(cityWidth / (4 * blockSize + blockSize));
+  var yDistricts = Math.floor(cityLength / (4 * blockSize + blockSize));
+  for (var i = 0; i < yDistricts; i++) {
+    for (var j = 0; j < xDistricts; j++) {
+      var xOffset = j * 250 + blockSize + (15 + 40);
+      var yOffset = i * 250 + blockSize + (15 + 40);
+      for (var k = 1; k <= 4; k++) {
+        var xShift = isHouseLeft(k) ? 0 : 90;
+        var yShift = isHouseUpper(k) ? 0 : 90;
+        var matrix = new THREE.Matrix4().makeTranslation(
+          xOffset + xShift,
+          0,
+          yOffset + yShift
+        );
+        generateFlat(matrix);
+      }
+    }
+  }
+}
+function generateFlat(matrix) {
+  var matrixGlobal = new THREE.Matrix4().makeTranslation(
+    -cityWidth / 2,
+    0,
+    -cityLength / 2
+  );
+  // var single = new THREE.Geometry();
+  var loader = new GLTFLoader();
+
+  var newMaterial = new THREE.MeshLambertMaterial({
+    color: 0xffffff,
+  });
+  var textureLoader = new THREE.TextureLoader();
+  var texture = textureLoader.load(FlatImg);
+
+  loader.load(
+    Flat,
+    function (gltf) {
+      var flat = gltf.scene.children[0];
+
+      gltf.scene.traverse(function (child) {
+        if (child.isMesh) {
+          child.material = newMaterial;
+          child.material.map = texture;
+          child.receiveShadow = true;
+          child.castShadow = true;
+        }
+      });
+      flat.visible = true;
+      // flat.geometry.center();
+      flat.applyMatrix4(matrix);
+      flat.applyMatrix4(matrixGlobal);
+      // flat.updateMatrix();
+      flat.scale.set(30, 30, 30);
+      scene.add(flat);
+    },
+    undefined,
+    function (error) {
+      console.error(error);
+    }
+  );
 }
 
 function random(min, max) {
