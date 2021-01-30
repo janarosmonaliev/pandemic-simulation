@@ -17,7 +17,8 @@ var daysPassed = 0;
 var probability = function (n) {
   return !!n && Math.random() * 100 <= n;
 };
-var showPaths = false;
+
+// Controls setup
 const control = {
   play: true,
   tSpeed: 0.001,
@@ -42,7 +43,6 @@ const control = {
 init();
 generatePopulation();
 initControls();
-
 animate();
 
 function init() {
@@ -93,7 +93,7 @@ function init() {
   // NOTE Shift the plane
   // planeGeometry.applyMatrix4(new THREE.Matrix4().makeTranslation(50, -50, 0));
   var planeMaterial = new THREE.MeshStandardMaterial({
-    color: 0x474747,
+    color: 0x303030,
     polygonOffset: true,
     polygonOffsetFactor: 5,
     side: THREE.DoubleSide,
@@ -104,10 +104,10 @@ function init() {
   scene.add(plane);
 
   // NOTE Light
-  var ambientLight = new THREE.AmbientLight(0x787878);
+  var ambientLight = new THREE.AmbientLight(0x787878, 0.7);
   scene.add(ambientLight);
 
-  var light = new THREE.DirectionalLight(0xffffff, 0.8);
+  var light = new THREE.DirectionalLight(0xffffff, 1);
   light.position.set(-500, 1000, -300);
 
   light.shadow.camera.near = 50;
@@ -249,7 +249,6 @@ function generateCityGrid(gridWidth, gridLength, districtMinSize) {
       cityGrid[i][j] = 0;
     }
   }
-
   var districtScale = 4;
 
   // Horizontal Routes
@@ -439,14 +438,40 @@ function Building(Width, Height, Length, Mesh) {
   this.Mesh = Mesh;
 }
 
+// SECTION Generate City
 function generateCity(cityWidth, cityLength) {
   var blockSize = 50;
   var xDistricts = Math.floor(cityWidth / (4 * blockSize + blockSize));
   var yDistricts = Math.floor(cityLength / (4 * blockSize + blockSize));
   for (var i = 0; i < yDistricts; i++) {
     for (var j = 0; j < xDistricts; j++) {
+      // Generate District plane
       var xOffset = j * 250 + blockSize + (15 + 40);
       var yOffset = i * 250 + blockSize + (15 + 40);
+
+      var geometry = new THREE.PlaneGeometry(200, 200);
+      var material = new THREE.MeshPhongMaterial({
+        // color: 0x0dae62,
+        color: 0xe0e0e0,
+        // polygonOffset: true,
+        // polygonOffsetFactor: 5,
+        side: THREE.DoubleSide,
+        shininess: 10,
+      });
+      var districtPlane = new THREE.Mesh(geometry, material);
+      districtPlane.receiveShadow = true;
+      districtPlane.rotation.x = -Math.PI / 2;
+      districtPlane.position.y = 1;
+      districtPlane.applyMatrix4(
+        new THREE.Matrix4().makeTranslation(
+          xOffset + 45 - cityWidth / 2,
+          0,
+          yOffset + 45 - cityLength / 2
+        )
+      );
+      scene.add(districtPlane);
+
+      // Generate buildings
       for (var k = 1; k <= 4; k++) {
         var xShift = isHouseLeft(k) ? 0 : 90;
         var yShift = isHouseUpper(k) ? 0 : 90;
@@ -455,12 +480,12 @@ function generateCity(cityWidth, cityLength) {
           0,
           yOffset + yShift
         );
-        generateFlat(matrix);
+        generateFlat(matrix, isHouseLeft(k));
       }
     }
   }
 }
-function generateFlat(matrix) {
+function generateFlat(matrix, rotateLeft) {
   var matrixGlobal = new THREE.Matrix4().makeTranslation(
     -cityWidth / 2,
     0,
@@ -474,7 +499,7 @@ function generateFlat(matrix) {
   });
   var textureLoader = new THREE.TextureLoader();
   var texture = textureLoader.load(FlatImg);
-
+  var rotation = rotateLeft ? -Math.PI / 2 : Math.PI / 2;
   loader.load(
     Flat,
     function (gltf) {
@@ -492,6 +517,8 @@ function generateFlat(matrix) {
       // flat.geometry.center();
       flat.applyMatrix4(matrix);
       flat.applyMatrix4(matrixGlobal);
+      flat.position.y = 1;
+      flat.rotateY(rotation);
       // flat.updateMatrix();
       flat.scale.set(30, 30, 30);
       scene.add(flat);
@@ -610,7 +637,6 @@ function randomHouse() {
     Math.floor(Math.random() * Math.floor(4)) + 1,
   ];
 }
-
 function isHouseLeft(index) {
   if (index % 2 == 1) {
     return true;
