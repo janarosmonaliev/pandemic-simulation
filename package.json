@@ -27,12 +27,17 @@
     "type": "git",
     "url": "git+https://github.com/janarosmonaliev/research-simulations.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "pandemic",
+    "covid-19",
+    "simulation",
+    "threejs",
+    "research"
+  ],
+  "author": "Zhanarbek Osmonaliev",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/janarosmonaliev/research-simulations/issues"
   },
-  "homepage": "https://github.com/janarosmonaliev/research-simulations#readme",
-  "main": "webpack.config.js"
+  "homepage": "https://github.com/janarosmonaliev/research-simulations#readme"
 }
