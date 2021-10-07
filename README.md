@@ -1,6 +1,6 @@
 # Research Project at SUNY Korea
 
-![Pandemic Simulation Banner](https://janarosmonaliev.github.io/research-simulations/src/images/research-simulations-banner.png)
+![Pandemic Simulation Banner](https://janarosmonaliev.github.io/pandemic-simulation/src/images/research-simulations-banner.png)
 
 This is a final project for CSE487 course under StonyBrook University curriculum. The project aims to show different tendencies of how pandemics spread and allows the user to directly affect the course of events in this city populated with synthetic blobs. It was build using [ThreeJS](https://threejs.org) and bundled with [Webpack](https://webpack.js.org).
 
@@ -20,7 +20,7 @@ Before you jump into the demo, you must be familiar with the controls and know h
 
 Now, you can go ahead and play around with the simulation.
 
-## [Live Demo](https://janarosmonaliev.github.io/research-simulations/)
+## [Live Demo](https://janarosmonaliev.github.io/pandemic-simulation/)
 
 ## Implementation
 
@@ -32,7 +32,7 @@ One day is counted in terms of blobs' two way travel from home to work. So, on e
 
 The algorithm assigns the blob with two random houses. Since the city's structure is fairly simple, the graph path is generated empirically, using building's district index and position within. Using complex algorithms like Djikstra would have overcomplicated things, e.g. a 5x5 district city with 4 buildings within each would need a graph with 84 nodes and 94 edges!
 
-![Image of a generated city graph in 3D space](https://janarosmonaliev.github.io/research-simulations/src/images/progress-graphs.png)
+![Image of a generated city graph in 3D space](https://janarosmonaliev.github.io/pandemic-simulation/src/images/progress-graphs.png)
 
 ### Loading GLTF objects, applying textures
 
