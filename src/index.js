@@ -85,7 +85,7 @@ function init() {
   controls.maxDistance = 1500;
 
   // NOTE: Skybox
-  var skyBoxGeometry = new THREE.CubeGeometry(10000, 10000, 10000);
+  var skyBoxGeometry = new THREE.BoxGeometry(10000, 10000, 10000);
   var skyBoxMaterial = new THREE.MeshBasicMaterial({
     color: 0xffffff,
     side: THREE.BackSide,
