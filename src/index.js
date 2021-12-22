@@ -77,13 +77,14 @@ function init() {
   // SECTION: Controls
   controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
-  controls.dampingFactor = 0.05;
+  controls.dampingFactor = 0.09;
   controls.screenSpacePanning = false;
   controls.maxPolarAngle = Math.PI * 0.45;
   controls.minPolarAngle = Math.PI * 0.0;
   controls.minDistance = 200;
-  controls.maxDistance = 1500;
-
+  controls.maxDistance = 2000;
+  controls.smoothZoom = true;
+  controls.zoomSpeed = 2;
   // NOTE: Skybox
   var skyBoxGeometry = new THREE.BoxGeometry(10000, 10000, 10000);
   var skyBoxMaterial = new THREE.MeshBasicMaterial({
