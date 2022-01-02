@@ -1,4 +1,4 @@
-# Research Project at SUNY Korea
+# Pandemic Simulation in ThreeJS
 
 ![Pandemic Simulation Banner](https://janarosmonaliev.github.io/pandemic-simulation/src/images/research-simulations-banner.png)
 
