@@ -22,6 +22,7 @@ var daysPassed = 0;
 var probability = function (n) {
   return !!n && Math.random() * 100 <= n;
 };
+var elapsedDays = 1;
 
 // Controls setup
 const control = {
@@ -51,7 +52,9 @@ initControls();
 animate();
 
 function init() {
-  document.querySelector(".counter").innerHTML = control.infectedBlobs;
+  document.querySelector(".case-counter").innerHTML =
+    control.infectedBlobs + "/" + control.peopleCount;
+  document.querySelector(".day-counter").innerHTML = elapsedDays;
   // SECTION: Renderer
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setClearColor(new THREE.Color(0xffffff));
@@ -67,7 +70,7 @@ function init() {
     60,
     window.innerWidth / window.innerHeight,
     0.1,
-    10000
+    5000
   );
   camera.position.y = 1300;
   camera.position.z = 0;
@@ -82,7 +85,7 @@ function init() {
   controls.maxPolarAngle = Math.PI * 0.45;
   controls.minPolarAngle = Math.PI * 0.0;
   controls.minDistance = 200;
-  controls.maxDistance = 2000;
+  controls.maxDistance = 3000;
   controls.smoothZoom = true;
   controls.zoomSpeed = 2;
   // NOTE: Skybox
@@ -149,7 +152,7 @@ function init() {
   // scene.add(helper);
 
   // SECTION City Generation
-  scene.add(generateCity(cityWidth, cityLength));
+  generateCity(cityWidth, cityLength);
 
   // Adjust the scene on window resize
   window.addEventListener("resize", onWindowResize, false);
@@ -260,7 +263,7 @@ function generateFlat(GLTFObject, objTexture, matrix, rotateLeft, scale) {
         if (child.isMesh) {
           child.material = newMaterial;
           child.material.map = texture;
-          child.receiveShadow = true;
+          child.receiveShadow = false;
           child.castShadow = true;
         }
       });
@@ -292,6 +295,9 @@ function randomInt(min, max) {
 
 // SECTION City Graph Creation
 function generatePopulation() {
+  document.querySelector(".day-counter").innerHTML = elapsedDays;
+  document.querySelector(".case-counter").innerHTML =
+    control.infectedBlobs + "/" + control.peopleCount;
   for (var i = 0; i < control.peopleCount; i++) {
     var src = randomHouse();
     var dst = randomHouse();
@@ -436,15 +442,18 @@ function infectBlobs() {
           );
           pathsArray[blobIndex].isInfected = true;
           control.infectedBlobs += 1;
-          document.querySelector(".counter").innerHTML = control.infectedBlobs;
+          document.querySelector(".case-counter").innerHTML =
+            control.infectedBlobs + "/" + control.peopleCount;
         }
       }
     }
   }
+  elapsedDays++;
+  document.querySelector(".day-counter").innerHTML = elapsedDays;
 }
 
 function initControls() {
-  var gui = new dat.GUI({ width: 500 });
+  var gui = new dat.GUI({ width: 400 });
   var populationSetings = gui.addFolder("Population");
   populationSetings
     .add(control, "peopleCount", 50, 500, 2)
@@ -457,7 +466,7 @@ function initControls() {
   var infectionSettings = gui.addFolder("Disease Spread");
   infectionSettings
     .add(control, "infectedBlobs", 1, 50, 1)
-    .name("Infected Blobs");
+    .name("Infected Blobs (Reload)");
   infectionSettings
     .add(control, "infectionChance", 1, 50, 1)
     .name("Infection Chance (%)");
